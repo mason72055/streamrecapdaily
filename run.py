@@ -44,7 +44,9 @@ def twitch_token():
     r = requests.post("https://id.twitch.tv/oauth2/token", data={
         "client_id": TWITCH_ID, "client_secret": TWITCH_SECRET,
         "grant_type": "client_credentials"}, timeout=30)
-    r.raise_for_status()
+    if r.status_code != 200:
+        raise RuntimeError(f"Twitch login failed ({r.status_code}): {r.text[:200]} "
+                           f"[client id length {len(TWITCH_ID)}, secret length {len(TWITCH_SECRET)}]")
     return r.json()["access_token"]
 
 
@@ -317,7 +319,7 @@ def main():
         chans = [c for c in buffer_channels() if c["service"] in ("tiktok", "youtube", "instagram")]
         log("Buffer channels: " + ", ".join(f"{c['service']}={c['name']}" for c in chans))
     except Exception as e:
-        log(f"Buffer check FAILED: {e}")
+        log(f"Buffer check FAILED: {e} [key length {len(BUFFER_KEY)}]")
         if not args.dry_run:
             raise
 
