@@ -54,10 +54,23 @@
     "silky",
     "kaicenatlive"
   ],
-  "hashtags": "#twitch #streamer #clips #fyp",
+  "hashtags": "#streamer #clips #fyp",
   "seed_boost": 3,
   "always_scan_categories": [
     "509658",
     "509672"
+  ],
+  "kick_enabled": true,
+  "kick_seed_streamers": [
+    "n3on",
+    "adinross",
+    "xqc",
+    "amouranth",
+    "trainwreckstv",
+    "iceposeidon",
+    "hstikkytokky",
+    "sneako",
+    "cuffem",
+    "westcol"
   ]
 }

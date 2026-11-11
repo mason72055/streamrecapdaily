@@ -92,8 +92,12 @@ def find_candidates(token, posted):
         for c in helix(token, "clips", {"game_id": gid, "first": 50, **window}):
             clips[c["id"]] = c
 
+    if CFG.get("kick_enabled"):
+        for k in kick_clips():
+            clips[k["id"]] = k
+
     campaign = {s.lower() for s in CFG["campaign_streamers"]}
-    seeds = {s.lower() for s in CFG["seed_streamers"]}
+    seeds = {s.lower() for s in CFG["seed_streamers"] + CFG.get("kick_seed_streamers", [])}
     blocked = {s.lower() for s in CFG["blocked_streamers"]}
     good = []
     for c in clips.values():
@@ -123,6 +127,43 @@ def find_candidates(token, posted):
             break
     log(f"Scanned {len(clips)} clips from {len(broadcaster_ids)} streamers; {len(good)} usable.")
     return picked
+
+
+# -------------------------------------------------------------------- Kick ---
+KICK_HEADERS = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+                              "(KHTML, like Gecko) Chrome/130.0 Safari/537.36",
+                "Accept": "application/json"}
+
+
+def kick_clips():
+    """Top Kick clips of the day, shaped like Twitch clips. Never breaks the run."""
+    urls = ["https://kick.com/api/v2/clips?sort=view&time=day"]
+    urls += [f"https://kick.com/api/v2/channels/{s}/clips?sort=view&time=day"
+             for s in CFG.get("kick_seed_streamers", [])]
+    out, fails = {}, 0
+    for u in urls:
+        try:
+            r = requests.get(u, headers=KICK_HEADERS, timeout=20)
+            if r.status_code != 200:
+                fails += 1
+                continue
+            for k in r.json().get("clips", []):
+                ch = k.get("channel") or {}
+                name = ch.get("username") or ch.get("slug") or "Kick streamer"
+                src = k.get("video_url") or k.get("clip_url")
+                if not src:
+                    continue
+                out[k["id"]] = {
+                    "id": k["id"], "url": src, "title": k.get("title") or "",
+                    "broadcaster_name": name, "broadcaster_id": "kick:" + (ch.get("slug") or name),
+                    "view_count": int(k.get("view_count") or k.get("views") or 0),
+                    "duration": float(k.get("duration") or 0), "language": "en",
+                    "platform": "Kick", "mature": bool(k.get("is_mature")),
+                }
+        except Exception:
+            fails += 1
+    log(f"Kick: {len(out)} clips found ({fails} of {len(urls)} requests blocked/failed).")
+    return list(out.values())
 
 
 # ------------------------------------------------------------------ Editing ---
@@ -199,8 +240,12 @@ def make_vertical(src, ass, dst, duration):
 def produce(clip):
     cid = clip["id"]
     raw = WORK / f"{cid}.mp4"
-    subprocess.run([sys.executable, "-m", "yt_dlp", "-q", "-f", "best[ext=mp4]/best",
-                    "-o", str(raw), clip["url"]], check=True, timeout=300)
+    if clip.get("platform") == "Kick":
+        subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-user_agent", KICK_HEADERS["User-Agent"],
+                        "-i", clip["url"], "-c", "copy", str(raw)], check=True, timeout=300)
+    else:
+        subprocess.run([sys.executable, "-m", "yt_dlp", "-q", "-f", "best[ext=mp4]/best",
+                        "-o", str(raw), clip["url"]], check=True, timeout=300)
     words = transcribe(raw)
     ass = WORK / f"{cid}.ass"
     build_ass(words, clip["broadcaster_name"], clip["duration"], ass)
@@ -309,7 +354,7 @@ def schedule_times(n):
 def post_clip(clip, url, due, chans):
     name = clip["broadcaster_name"]
     title = clip["title"].strip() or f"{name} moment"
-    text = f"{title} 😭\n\n🎥 {name} on Twitch\n{CFG['hashtags']} #{clip['broadcaster_name'].lower()}"
+    text = f"{title} 😭\n\n🎥 {name} on {clip.get('platform', 'Twitch')}\n{CFG['hashtags']} #{clip.get('platform', 'Twitch').lower()} #{name.lower().replace(' ', '')}"
     results = []
     for ch in chans:
         svc = ch["service"]
