@@ -335,6 +335,8 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--dry-run", action="store_true")
     args = ap.parse_args()
+    if not CFG.get("live", False):
+        args.dry_run = True  # posting switched off in config.json
     OUT.mkdir(exist_ok=True)
     WORK.mkdir(exist_ok=True)
 
