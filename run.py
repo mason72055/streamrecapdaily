@@ -25,9 +25,16 @@ WORK = ROOT / "work"
 MEDIA = ROOT / "media_branch"
 CFG = json.loads((ROOT / "config.json").read_text())
 
-TWITCH_ID = os.environ.get("TWITCH_CLIENT_ID", "")
-TWITCH_SECRET = os.environ.get("TWITCH_CLIENT_SECRET", "")
-BUFFER_KEY = os.environ.get("BUFFER_API_KEY", "")
+def _secret(name):
+    # tolerate keys saved with a "Secret:" / "Name:" label or stray spaces pasted in
+    v = os.environ.get(name, "").strip()
+    v = re.sub(r"^(secret|name)\s*:\s*", "", v, flags=re.I).strip()
+    return v.split()[-1] if v else v
+
+
+TWITCH_ID = _secret("TWITCH_CLIENT_ID")
+TWITCH_SECRET = _secret("TWITCH_CLIENT_SECRET")
+BUFFER_KEY = _secret("BUFFER_API_KEY")
 REPO = os.environ.get("GITHUB_REPOSITORY", "")
 GH_TOKEN = os.environ.get("GITHUB_TOKEN", "")
 
