@@ -1,5 +1,5 @@
 {
-  "live": false,
+  "live": true,
   "clips_per_day": 3,
   "post_times_central": [
     "12:30",
