@@ -1,0 +1,37 @@
+{
+ "log": [
+  "Buffer channels: youtube=streamrecapdaily3, instagram=streamrecapdaily3, tiktok=streamrecapdaily3",
+  "Twitch login OK",
+  "Kick: 180 clips found (0 of 11 requests blocked/failed).",
+  "Scanned 778 clips from 55 streamers; 477 usable.",
+  "Made: loltyler1 - zed (9156 views) -> 20261111-HilariousSparklingCrocodileJebaited-JDupJaXr6eLCF_Xs.mp4",
+  "Made: xQc - rsetdryftgyhuiojipokp (7104 views) -> 20261111-clip_01M73TDVGBGC62J5PMQZPPSG93.mp4",
+  "Made: Tfue - LMAO (4460 views) -> 20261111-TangibleBlindingSmoothieMoreCowbell-Lm74__I1lfekMWxd.mp4"
+ ],
+ "clips": [
+  {
+   "streamer": "loltyler1",
+   "title": "zed",
+   "views": 9156,
+   "twitch_url": "https://www.twitch.tv/loltyler1/clip/HilariousSparklingCrocodileJebaited-JDupJaXr6eLCF_Xs",
+   "file": "20261111-HilariousSparklingCrocodileJebaited-JDupJaXr6eLCF_Xs.mp4",
+   "transcript": "You think they're on you you see that What a finals well done"
+  },
+  {
+   "streamer": "xQc",
+   "title": "rsetdryftgyhuiojipokp",
+   "views": 7104,
+   "twitch_url": "https://clips.kick.com/clips/f7/clip_01M73TDVGBGC62J5PMQZPPSG93/playlist.m3u8",
+   "file": "20261111-clip_01M73TDVGBGC62J5PMQZPPSG93.mp4",
+   "transcript": "earn back your confidence. Should've been committed to your family, you fucking ghoul. You degenerate. What are you gonna do to work back to earn that confidence? What are you gonna start going to each and every one of their houses to fuck them? The guy announced that he was making an affordable GPU, even though in this GPU crisis, people would tell him, yo, don't fuck whoever, don't do all that. Fuck my wife, he said. Gamers would say, please fuck my wife instead. I mean, they would say that. I mean, I mean, as I'm not stupid, I know for a fact that people say, oh no, I'm mad about that. He made an affordable GPU, people would offer their wives as an offering. You can't have sex with me, Jensen. How about that? Don't look at me. Don't look at me."
+  },
+  {
+   "streamer": "Tfue",
+   "title": "LMAO",
+   "views": 4460,
+   "twitch_url": "https://www.twitch.tv/tfue/clip/TangibleBlindingSmoothieMoreCowbell-Lm74__I1lfekMWxd",
+   "file": "20261111-TangibleBlindingSmoothieMoreCowbell-Lm74__I1lfekMWxd.mp4",
+   "transcript": "Fuck Brother casinos rigged this fuck. Can you change your outfit here at this spot? Oh my god. Whoa Yo, I didn't know I thought you were joking bro What I thought you were joking about the tits No, dude, she pulls them out You've never seen a pair. I just showed that on stream though. Am I gonna get in trouble? You're just gonna have to"
+  }
+ ]
+}
