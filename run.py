@@ -87,11 +87,13 @@ def find_candidates(token, posted):
     for bid in broadcaster_ids:
         for c in helix(token, "clips", {"broadcaster_id": bid, "first": 5, **window}):
             clips[c["id"]] = c
-    for g in helix(token, "games/top", {"first": CFG["top_games_to_scan"]}):
-        for c in helix(token, "clips", {"game_id": g["id"], "first": 20, **window}):
+    game_ids = [g["id"] for g in helix(token, "games/top", {"first": CFG["top_games_to_scan"]})]
+    for gid in dict.fromkeys(CFG.get("always_scan_categories", []) + game_ids):
+        for c in helix(token, "clips", {"game_id": gid, "first": 50, **window}):
             clips[c["id"]] = c
 
     campaign = {s.lower() for s in CFG["campaign_streamers"]}
+    seeds = {s.lower() for s in CFG["seed_streamers"]}
     blocked = {s.lower() for s in CFG["blocked_streamers"]}
     good = []
     for c in clips.values():
@@ -102,7 +104,11 @@ def find_candidates(token, posted):
             continue
         if not (CFG["min_seconds"] <= c["duration"] <= CFG["max_seconds"]):
             continue
-        c["score"] = c["view_count"] * (3 if name in campaign else 1)
+        login = c["broadcaster_name"].lower().replace(" ", "")
+        boost = 3 if (name in campaign or login in campaign) else 1
+        if name in seeds or login in seeds:
+            boost *= CFG.get("seed_boost", 1)
+        c["score"] = c["view_count"] * boost
         good.append(c)
     good.sort(key=lambda c: c["score"], reverse=True)
 

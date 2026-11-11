@@ -31,13 +31,33 @@
     "hasanabi",
     "jasontheween",
     "agent00",
-    "duke",
+    "dukedennis",
     "fanum",
     "adapt",
+    "marlon",
+    "loltyler1",
+    "tfue",
+    "nickmercs",
+    "timthetatman",
     "summit1g",
     "shroud",
     "tarik",
-    "marlon"
+    "pokimane",
+    "valkyrae",
+    "emiru",
+    "jidion",
+    "rakai",
+    "yourrage",
+    "cinna",
+    "sneako",
+    "berleezy",
+    "silky",
+    "kaicenatlive"
   ],
-  "hashtags": "#twitch #streamer #clips #fyp"
+  "hashtags": "#twitch #streamer #clips #fyp",
+  "seed_boost": 3,
+  "always_scan_categories": [
+    "509658",
+    "509672"
+  ]
 }
