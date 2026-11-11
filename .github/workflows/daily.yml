@@ -1,0 +1,50 @@
+name: Daily clips
+
+on:
+  schedule:
+    - cron: "7 15 * * *"   # about 9:07 AM Central every day
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Test only (make clips, post nothing)"
+        type: boolean
+        default: true
+
+permissions:
+  contents: write
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - name: Install video tools
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg fonts-noto-core
+      - run: pip install -q -r requirements.txt
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cache/huggingface
+          key: whisper-small-en
+      - name: Make and schedule clips
+        env:
+          TWITCH_CLIENT_ID: ${{ secrets.TWITCH_CLIENT_ID }}
+          TWITCH_CLIENT_SECRET: ${{ secrets.TWITCH_CLIENT_SECRET }}
+          BUFFER_API_KEY: ${{ secrets.BUFFER_API_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ inputs.dry_run }}" = "true" ]; then
+            python run.py --dry-run
+          else
+            python run.py
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: clips
+          path: out/
+          retention-days: 7

@@ -1,0 +1,19 @@
+{
+  "clips_per_day": 3,
+  "post_times_central": ["12:30", "15:30", "19:30"],
+  "timezone": "America/Chicago",
+  "languages": ["en"],
+  "min_seconds": 8,
+  "max_seconds": 60,
+  "top_games_to_scan": 8,
+  "top_streams_to_scan": 25,
+  "max_clips_per_streamer": 1,
+  "campaign_streamers": [],
+  "blocked_streamers": [],
+  "seed_streamers": [
+    "kaicenat", "ishowspeed", "xqc", "jynxzi", "caseoh_", "plaqueboymax",
+    "stableronaldo", "lacy", "sketch", "zackrawrr", "hasanabi", "jasontheween",
+    "agent00", "duke", "fanum", "adapt", "summit1g", "shroud", "tarik", "marlon"
+  ],
+  "hashtags": "#twitch #streamer #clips #fyp"
+}
