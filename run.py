@@ -114,7 +114,11 @@ def find_candidates(token, posted):
             boost *= CFG.get("seed_boost", 1)
         c["score"] = c["view_count"] * boost
         good.append(c)
-    good.sort(key=lambda c: c["score"], reverse=True)
+    # Paid (campaign) clips go first; the rest of the day's slots are filled with top clips.
+    for c in good:
+        n = c["broadcaster_name"].lower()
+        c["paid"] = (n in campaign or n.replace(" ", "") in campaign) and c["view_count"] >= CFG.get("campaign_min_clip_views", 500)
+    good.sort(key=lambda c: (c["paid"], c["score"]), reverse=True)
 
     picked, per = [], {}
     for c in good:
@@ -412,7 +416,7 @@ def main():
         try:
             f = produce(clip)
             made.append((clip, f))
-            log(f"Made: {clip['broadcaster_name']} - {clip['title']} ({clip['view_count']} views) -> {f.name}")
+            log(f"Made{' (CAMPAIGN)' if clip.get('paid') else ''}: {clip['broadcaster_name']} - {clip['title']} ({clip['view_count']} views) -> {f.name}")
         except Exception as e:
             log(f"Skipped {clip['id']}: {e}")
 
