@@ -246,6 +246,23 @@ def publish_media(files, posted):
     return urls
 
 
+def push_preview(files):
+    """Test runs: put the clips on a 'preview' branch so they can be reviewed."""
+    d = ROOT / "preview_branch"
+    shutil.rmtree(d, ignore_errors=True)
+    d.mkdir()
+    for f in files:
+        shutil.copy(f, d / f.name)
+    g = lambda *a: subprocess.run(["git", "-C", str(d), *a], check=True, capture_output=True)
+    g("init", "-q", "-b", "preview")
+    g("config", "user.name", "streamrecap-bot")
+    g("config", "user.email", "bot@users.noreply.github.com")
+    g("add", "-A")
+    g("commit", "-q", "-m", "test clips")
+    g("push", "-q", "--force", f"https://x-access-token:{GH_TOKEN}@github.com/{REPO}.git", "preview")
+    log("Test clips saved to the 'preview' branch.")
+
+
 # ------------------------------------------------------------------- Buffer ---
 def buffer_q(query, variables=None):
     r = requests.post("https://api.buffer.com", json={"query": query, "variables": variables or {}},
@@ -349,6 +366,9 @@ def main():
     summary = [{"streamer": c["broadcaster_name"], "title": c["title"], "views": c["view_count"],
                 "twitch_url": c["url"], "file": f.name, "transcript": c.get("transcript", "")}
                for c, f in made]
+    if args.dry_run and made and GH_TOKEN:
+        (OUT / "summary.json").write_text(json.dumps({"log": log_lines, "clips": summary}, indent=1))
+        push_preview([f for _, f in made] + [OUT / "summary.json"])
 
     if not args.dry_run and made:
         for c, _ in made:
