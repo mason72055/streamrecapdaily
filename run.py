@@ -365,7 +365,12 @@ def schedule_times(n):
 
 def post_clip(clip, url, due, chans):
     name = clip["broadcaster_name"]
-    title = clip["title"].strip() or f"{name} moment"
+    title = clip["title"].strip()
+    words_t = clip.get("transcript", "").split()
+    if (len(title) < 4 or (" " not in title and len(title) > 10)
+            or sum(ch.isalpha() for ch in title) < len(title) * 0.5):
+        # keyboard-mash clip titles ("rsetdryftgy...") make bad hooks; use the quote instead
+        title = (f'"{" ".join(words_t[:8])}..."' if len(words_t) >= 4 else f"{name} lost it")
     tag = CFG.get("campaign_hashtags", {}).get(name.lower().replace(" ", ""), "")
     if clip.get("caption"):
         text = clip["caption"]
