@@ -358,7 +358,8 @@ def schedule_times(n):
 def post_clip(clip, url, due, chans):
     name = clip["broadcaster_name"]
     title = clip["title"].strip() or f"{name} moment"
-    text = f"{title} 😭\n\n🎥 {name} on {clip.get('platform', 'Twitch')}\n{CFG['hashtags']} #{clip.get('platform', 'Twitch').lower()} #{name.lower().replace(' ', '')}"
+    tag = CFG.get("campaign_hashtags", {}).get(name.lower().replace(" ", ""), "")
+    text = f"{title} 😭\n\n🎥 {name} on {clip.get('platform', 'Twitch')}\n{CFG['hashtags']} #{clip.get('platform', 'Twitch').lower()} #{name.lower().replace(' ', '')} {tag}".rstrip()
     results = []
     for ch in chans:
         svc = ch["service"]
@@ -431,8 +432,14 @@ def main():
         for c, _ in made:
             posted[c["id"]] = dt.date.today().isoformat()
         urls = publish_media([f for _, f in made], posted)
-        for (c, f), due, s in zip(made, schedule_times(len(made)), summary):
+        # paid clips get the LAST slots of the day (evening), so the 30-minute submit window is easy
+        order = sorted(range(len(made)), key=lambda i: made[i][0].get("paid", False))
+        times = schedule_times(len(made))
+        slot = {idx: times[pos] for pos, idx in enumerate(order)}
+        for i, ((c, f), s) in enumerate(zip(made, summary)):
+            due = slot[i]
             s["posts"] = post_clip(c, urls[f.name], due, chans)
+            s["paid"] = bool(c.get("paid"))
             log(f"{c['broadcaster_name']}: " + "; ".join(s["posts"]))
 
     (OUT / "summary.json").write_text(json.dumps({"log": log_lines, "clips": summary}, indent=1))

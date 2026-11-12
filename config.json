@@ -15,7 +15,10 @@
   "top_games_to_scan": 8,
   "top_streams_to_scan": 25,
   "max_clips_per_streamer": 1,
-  "campaign_streamers": [],
+  "campaign_streamers": [
+    "lacy",
+    "jasontheween"
+  ],
   "blocked_streamers": [],
   "seed_streamers": [
     "kaicenat",
@@ -73,5 +76,9 @@
     "cuffem",
     "westcol"
   ],
-  "campaign_min_clip_views": 500
+  "campaign_min_clip_views": 500,
+  "campaign_hashtags": {
+    "lacy": "#Lacy",
+    "jasontheween": "#JasonTheWeen"
+  }
 }
