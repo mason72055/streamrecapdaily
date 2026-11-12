@@ -367,13 +367,16 @@ def post_clip(clip, url, due, chans):
     name = clip["broadcaster_name"]
     title = clip["title"].strip() or f"{name} moment"
     tag = CFG.get("campaign_hashtags", {}).get(name.lower().replace(" ", ""), "")
-    text = f"{title} 😭\n\n🎥 {name} on {clip.get('platform', 'Twitch')}\n{CFG['hashtags']} #{clip.get('platform', 'Twitch').lower()} #{name.lower().replace(' ', '')} {tag}".rstrip()
+    if clip.get("caption"):
+        text = clip["caption"]
+    else:
+        text = f"{title} 😭\n\n🎥 {name} on {clip.get('platform', 'Twitch')}\n{CFG['hashtags']} #{clip.get('platform', 'Twitch').lower()} #{name.lower().replace(' ', '')} {tag}".rstrip()
     results = []
     for ch in chans:
         svc = ch["service"]
         meta = {}
         if svc == "youtube":
-            meta = {"youtube": {"title": f"{title} | {name} #shorts"[:100], "privacy": "public",
+            meta = {"youtube": {"title": (clip.get("yt_title") or f"{title} | {name} #shorts")[:100], "privacy": "public",
                                 "categoryId": "20", "madeForKids": False, "notifySubscribers": True}}
         elif svc == "instagram":
             meta = {"instagram": {"type": "reel", "shouldShareToFeed": True}}
@@ -394,11 +397,33 @@ def post_clip(clip, url, due, chans):
     return results
 
 
+def post_batch(folder):
+    """batch.json: [{"file": "a.mp4", "caption": "...", "yt_title": "...", "due_central": "2026-11-12 11:00"}]"""
+    items = json.loads((folder / "batch.json").read_text())
+    chans = [c for c in buffer_channels() if c["service"] in ("tiktok", "youtube", "instagram")]
+    posted = load_media_branch()
+    files = [folder / it["file"] for it in items]
+    urls = publish_media(files, posted)
+    tz = ZoneInfo(CFG["timezone"])
+    for it, f in zip(items, files):
+        due = dt.datetime.strptime(it["due_central"], "%Y-%m-%d %H:%M").replace(tzinfo=tz)
+        due = due.astimezone(dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.000Z")
+        clip = {"title": it.get("yt_title", ""), "broadcaster_name": it.get("streamer", "IShowSpeed"),
+                "caption": it["caption"], "yt_title": it.get("yt_title")}
+        log(f"{f.name}: " + "; ".join(post_clip(clip, urls[f.name], due, chans)))
+    step = os.environ.get("GITHUB_STEP_SUMMARY")
+    if step:
+        Path(step).write_text("## Batch\n\n" + "\n".join("- " + l for l in log_lines))
+
+
 # --------------------------------------------------------------------- Main ---
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--dry-run", action="store_true")
+    ap.add_argument("--batch", help="post a hand-made batch: folder with batch.json + mp4 files")
     args = ap.parse_args()
+    if args.batch:
+        return post_batch(Path(args.batch))
     if not CFG.get("live", False):
         args.dry_run = True  # posting switched off in config.json
     OUT.mkdir(exist_ok=True)

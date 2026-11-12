@@ -1,0 +1,29 @@
+name: Post a campaign batch
+
+on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: "Branch holding batch.json + clips"
+        required: true
+        default: "speed-batch"
+
+permissions:
+  contents: write
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -q requests
+      - name: Get the batch
+        run: git clone -q --depth 1 --branch "${{ inputs.branch }}" "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" batch
+      - name: Schedule it on Buffer
+        env:
+          BUFFER_API_KEY: ${{ secrets.BUFFER_API_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python run.py --batch batch
