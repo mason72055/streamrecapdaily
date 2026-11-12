@@ -1,0 +1,38 @@
+name: Campaign transcript (one-off)
+
+on:
+  workflow_dispatch:
+    inputs:
+      url:
+        description: "Stream URL"
+        required: true
+      start:
+        description: "Start time in seconds"
+        required: true
+      end:
+        description: "End time in seconds (blank = end of stream)"
+        required: false
+
+permissions:
+  contents: write
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - run: sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg
+      - run: pip install -q -r requirements.txt
+      - name: Transcribe
+        run: python speed_transcript.py "${{ inputs.url }}" "${{ inputs.start }}" ${{ inputs.end }}
+      - name: Save transcript to the 'transcripts' branch
+        run: |
+          mkdir pub && cp out/transcript.txt pub/ && cd pub
+          git init -q -b transcripts && git add -A
+          git -c user.name=streamrecap-bot -c user.email=bot@users.noreply.github.com commit -qm transcript
+          git push -q --force "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" transcripts
