@@ -117,7 +117,10 @@ def find_candidates(token, posted):
     # Paid (campaign) clips go first; the rest of the day's slots are filled with top clips.
     for c in good:
         n = c["broadcaster_name"].lower()
-        c["paid"] = (n in campaign or n.replace(" ", "") in campaign) and c["view_count"] >= CFG.get("campaign_min_clip_views", 500)
+        need = CFG.get("campaign_platform_only", {}).get(n.replace(" ", ""))
+        c["paid"] = ((n in campaign or n.replace(" ", "") in campaign)
+                     and c["view_count"] >= CFG.get("campaign_min_clip_views", 500)
+                     and (not need or c.get("platform", "Twitch") == need))
     good.sort(key=lambda c: (c["paid"], c["score"]), reverse=True)
 
     picked, per = [], {}
@@ -197,7 +200,7 @@ def ass_escape(s):
     return s.replace("\\", "").replace("{", "(").replace("}", ")").replace("\n", " ")
 
 
-def build_ass(words, header, duration, path):
+def build_ass(words, header, duration, path, overlay=""):
     lines = []
     chunk = []
     for w in words:
@@ -209,6 +212,8 @@ def build_ass(words, header, duration, path):
         lines.append(chunk)
 
     ev = [f"Dialogue: 0,{ass_time(0)},{ass_time(duration)},Header,,0,0,0,,{ass_escape(header)}"]
+    if overlay:
+        ev.append(f"Dialogue: 0,{ass_time(0)},{ass_time(duration)},Overlay,,0,0,0,,{ass_escape(overlay)}")
     for i, ch in enumerate(lines):
         start = ch[0][0]
         end = ch[-1][1]
@@ -223,7 +228,8 @@ def build_ass(words, header, duration, path):
         "BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, "
         "Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding\n"
         "Style: Cap,Noto Sans,84,&H00FFFFFF,&H00FFFFFF,&H00000000,&H64000000,-1,0,0,0,100,100,0,0,1,6,2,8,60,60,1330,1\n"
-        "Style: Header,Noto Sans,58,&H00FFFFFF,&H00FFFFFF,&H00000000,&H64000000,-1,0,0,0,100,100,0,0,1,5,2,2,60,60,1300,1\n\n"
+        "Style: Header,Noto Sans,58,&H00FFFFFF,&H00FFFFFF,&H00000000,&H64000000,-1,0,0,0,100,100,0,0,1,5,2,2,60,60,1300,1\n"
+        "Style: Overlay,Noto Sans,50,&H0000D7FF,&H00FFFFFF,&H00000000,&H64000000,-1,0,0,0,100,100,0,0,1,4,2,8,60,60,1500,1\n\n"
         "[Events]\nFormat: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text\n"
         + "\n".join(ev) + "\n", encoding="utf-8")
 
@@ -252,7 +258,9 @@ def produce(clip):
                         "-o", str(raw), clip["url"]], check=True, timeout=300)
     words = transcribe(raw)
     ass = WORK / f"{cid}.ass"
-    build_ass(words, clip["broadcaster_name"], clip["duration"], ass)
+    key = clip["broadcaster_name"].lower().replace(" ", "")
+    build_ass(words, clip["broadcaster_name"], clip["duration"], ass,
+              CFG.get("campaign_overlays", {}).get(key, "") if clip.get("paid") else "")
     safe = re.sub(r"[^A-Za-z0-9_-]", "", cid)[:60]
     out = OUT / f"{dt.date.today():%Y%m%d}-{safe}.mp4"
     make_vertical(raw, ass, out, clip["duration"])

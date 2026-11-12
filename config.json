@@ -16,8 +16,7 @@
   "top_streams_to_scan": 25,
   "max_clips_per_streamer": 1,
   "campaign_streamers": [
-    "lacy",
-    "jasontheween"
+    "skiimasktimmy"
   ],
   "blocked_streamers": [],
   "seed_streamers": [
@@ -55,7 +54,8 @@
     "sneako",
     "berleezy",
     "silky",
-    "kaicenatlive"
+    "kaicenatlive",
+    "skiimasktimmy"
   ],
   "hashtags": "#streamer #clips #fyp",
   "seed_boost": 3,
@@ -76,9 +76,14 @@
     "cuffem",
     "westcol"
   ],
-  "campaign_min_clip_views": 500,
+  "campaign_min_clip_views": 150,
   "campaign_hashtags": {
-    "lacy": "#Lacy",
-    "jasontheween": "#JasonTheWeen"
+    "skiimasktimmy": "twitch.tv/skiimasktimmy"
+  },
+  "campaign_overlays": {
+    "skiimasktimmy": "twitch.tv/skiimasktimmy"
+  },
+  "campaign_platform_only": {
+    "skiimasktimmy": "Twitch"
   }
 }
