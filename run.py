@@ -434,7 +434,7 @@ def main():
         urls = publish_media([f for _, f in made], posted)
         # paid clips get the LAST slots of the day (evening), so the 30-minute submit window is easy
         order = sorted(range(len(made)), key=lambda i: made[i][0].get("paid", False))
-        times = schedule_times(len(made))
+        times = sorted(schedule_times(len(made)))
         slot = {idx: times[pos] for pos, idx in enumerate(order)}
         for i, ((c, f), s) in enumerate(zip(made, summary)):
             due = slot[i]
