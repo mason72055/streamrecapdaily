@@ -464,6 +464,9 @@ def main():
     if not args.dry_run and made:
         for c, _ in made:
             posted[c["id"]] = dt.date.today().isoformat()
+        today = [{"streamer": c["broadcaster_name"], "paid": bool(c.get("paid")), "title": c["title"],
+                  "platform": c.get("platform", "Twitch"), "date": dt.date.today().isoformat()} for c, _ in made]
+        (MEDIA / "today.json").write_text(json.dumps(today, indent=1))
         urls = publish_media([f for _, f in made], posted)
         # paid clips get the LAST slots of the day (evening), so the 30-minute submit window is easy
         order = sorted(range(len(made)), key=lambda i: made[i][0].get("paid", False))
