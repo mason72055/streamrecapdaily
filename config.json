@@ -16,7 +16,8 @@
   "top_streams_to_scan": 25,
   "max_clips_per_streamer": 1,
   "campaign_streamers": [
-    "skiimasktimmy"
+    "skiimasktimmy",
+    "jasontheween"
   ],
   "blocked_streamers": [],
   "seed_streamers": [
@@ -78,7 +79,8 @@
   ],
   "campaign_min_clip_views": 150,
   "campaign_hashtags": {
-    "skiimasktimmy": "twitch.tv/skiimasktimmy"
+    "skiimasktimmy": "twitch.tv/skiimasktimmy",
+    "jasontheween": "#JasonTheWeen"
   },
   "campaign_overlays": {
     "skiimasktimmy": "twitch.tv/skiimasktimmy"
