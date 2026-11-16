@@ -17,7 +17,8 @@
   "max_clips_per_streamer": 1,
   "campaign_streamers": [
     "skiimasktimmy",
-    "jasontheween"
+    "jasontheween",
+    "irubyana"
   ],
   "blocked_streamers": [],
   "seed_streamers": [
@@ -80,12 +81,14 @@
   "campaign_min_clip_views": 150,
   "campaign_hashtags": {
     "skiimasktimmy": "twitch.tv/skiimasktimmy",
-    "jasontheween": "#JasonTheWeen"
+    "jasontheween": "#JasonTheWeen",
+    "irubyana": "@Irubyana #twitchlivestream"
   },
   "campaign_overlays": {
     "skiimasktimmy": "twitch.tv/skiimasktimmy"
   },
   "campaign_platform_only": {
-    "skiimasktimmy": "Twitch"
+    "skiimasktimmy": "Twitch",
+    "irubyana": "Twitch"
   }
 }
