@@ -130,6 +130,8 @@ def find_candidates(token, posted):
         name = c["broadcaster_name"].lower()
         if c["id"] in posted or name in blocked:
             continue
+        if blocked_hit(c.get("title", "")) or (CFG.get("skip_mature") and c.get("mature")):
+            continue
         if c.get("language") and c["language"].split("-")[0] not in langs:
             continue
         if not (CFG["min_seconds"] <= c["duration"] <= CFG["max_seconds"]):
@@ -156,7 +158,7 @@ def find_candidates(token, posted):
             continue
         per[b] = per.get(b, 0) + 1
         picked.append(c)
-        if len(picked) >= CFG["clips_per_day"] + 2:  # spares in case a download fails
+        if len(picked) >= CFG["clips_per_day"] + CFG.get("spare_clips", 2):  # spares if one fails/gets filtered
             break
     log(f"Scanned {len(clips)} clips from {len(broadcaster_ids)} streamers; {len(good)} usable.")
     return picked
@@ -197,6 +199,44 @@ def kick_clips():
             fails += 1
     log(f"Kick: {len(out)} clips found ({fails} of {len(urls)} requests blocked/failed).")
     return list(out.values())
+
+
+# ------------------------------------------------------------------- Safety ---
+def blocked_hit(text):
+    """First blocked word/phrase found in the text (config "blocked_words"), else ''."""
+    t = " " + re.sub(r"[^a-z0-9 ]+", " ", (text or "").lower()) + " "
+    for w in CFG.get("blocked_words", []):
+        if f" {w.lower()} " in t or (len(w) > 5 and w.lower() in t):
+            return w
+    return ""
+
+
+_nude = None
+NUDE_CLASSES = {"FEMALE_BREAST_EXPOSED", "FEMALE_GENITALIA_EXPOSED", "MALE_GENITALIA_EXPOSED",
+                "BUTTOCKS_EXPOSED", "ANUS_EXPOSED"}
+
+
+def has_nudity(path):
+    """Looks at one frame per second; True if any frame shows nudity. If the checker
+    can't load, it says so in the log and lets the clip through (keyword filters still apply)."""
+    global _nude
+    try:
+        if _nude is None:
+            from nudenet import NudeDetector
+            _nude = NudeDetector()
+        d = WORK / (Path(path).stem + "_frames")
+        shutil.rmtree(d, ignore_errors=True)
+        d.mkdir()
+        subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-i", str(path), "-vf", "fps=1,scale=640:-2",
+                        str(d / "f%03d.jpg")], check=True, timeout=120)
+        for f in sorted(d.glob("*.jpg")):
+            for hit in _nude.detect(str(f)):
+                if hit.get("class") in NUDE_CLASSES and hit.get("score", 0) >= CFG.get("nudity_min_score", 0.45):
+                    return f"{hit['class']} at {f.stem[1:]}s"
+        return ""
+    except Exception as e:
+        log(f"(nudity check unavailable: {e})")
+        return ""
 
 
 # ------------------------------------------------------------------ Editing ---
@@ -249,7 +289,7 @@ def hook_text(clip):
     t = re.sub(r"(?<!\w)[#!@]\w+", "", t)            # hashtags, !commands, @mentions
     t = re.sub(r"\s+", " ", t).strip(" -|:,.")
     letters = sum(ch.isalpha() for ch in t)
-    bad = (len(t) < 8 or len(t.split()) < 3 or letters < len(t) * 0.5
+    bad = ("*" in t or blocked_hit(t) or len(t) < 8 or len(t.split()) < 3 or letters < len(t) * 0.5
            or t.lower().replace(" ", "") == name.lower().replace(" ", ""))
     if bad:
         pick = int(re.sub(r"\D", "", str(clip["id"]))[-4:] or 0) if re.search(r"\d", str(clip["id"])) else len(clip["id"])
@@ -318,7 +358,14 @@ def produce(clip):
     else:
         subprocess.run([sys.executable, "-m", "yt_dlp", "-q", "-f", "best[ext=mp4]/best",
                         "-o", str(raw), clip["url"]], check=True, timeout=300)
+    if CFG.get("nudity_check"):
+        hit = has_nudity(raw)
+        if hit:
+            raise RuntimeError(f"nudity on screen ({hit}) - not posting")
     words = transcribe(raw)
+    said = blocked_hit(" ".join(w[2] for w in words))
+    if said and CFG.get("check_transcript"):
+        raise RuntimeError(f"blocked word said in clip ('{said}') - not posting")
     ass = WORK / f"{cid}.ass"
     key = clip["broadcaster_name"].lower().replace(" ", "")
     clip["hook"] = hook_text(clip) if CFG.get("hook_text", True) else ""
