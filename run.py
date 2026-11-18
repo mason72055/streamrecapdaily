@@ -249,7 +249,7 @@ def hook_text(clip):
     t = re.sub(r"(?<!\w)[#!@]\w+", "", t)            # hashtags, !commands, @mentions
     t = re.sub(r"\s+", " ", t).strip(" -|:,.")
     letters = sum(ch.isalpha() for ch in t)
-    bad = (len(t) < 8 or len(t.split()) < 2 or letters < len(t) * 0.5
+    bad = (len(t) < 8 or len(t.split()) < 3 or letters < len(t) * 0.5
            or t.lower().replace(" ", "") == name.lower().replace(" ", ""))
     if bad:
         pick = int(re.sub(r"\D", "", str(clip["id"]))[-4:] or 0) if re.search(r"\d", str(clip["id"])) else len(clip["id"])
