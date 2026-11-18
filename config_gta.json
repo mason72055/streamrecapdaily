@@ -1,0 +1,20 @@
+{
+  "page_name": "GTA 6 clips",
+  "live": true,
+  "only_game_names": ["Grand Theft Auto VI"],
+  "media_branch": "media-gta",
+  "preview_branch": "preview-gta",
+  "clips_per_day": 5,
+  "post_times_central": ["11:00", "14:00", "17:00", "20:00", "23:00"],
+  "timezone": "America/Chicago",
+  "languages": ["en"],
+  "min_seconds": 8,
+  "max_seconds": 60,
+  "max_clips_per_streamer": 2,
+  "hook_text": true,
+  "kick_enabled": false,
+  "campaign_streamers": [],
+  "seed_streamers": [],
+  "blocked_streamers": [],
+  "hashtags": "#gta6 #gtavi #gta #fyp"
+}

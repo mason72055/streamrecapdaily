@@ -23,7 +23,11 @@ ROOT = Path(__file__).resolve().parent
 OUT = ROOT / "out"
 WORK = ROOT / "work"
 MEDIA = ROOT / "media_branch"
-CFG = json.loads((ROOT / "config.json").read_text())
+# CONFIG picks the settings file, so one codebase can run several pages
+# (config.json = Stream Recap Daily, config_gta.json = the GTA 6 page).
+CFG = json.loads((ROOT / os.environ.get("CONFIG", "config.json")).read_text())
+MEDIA_BRANCH = CFG.get("media_branch", "media")
+PREVIEW_BRANCH = CFG.get("preview_branch", "preview")
 
 def _secret(name):
     # tolerate keys saved with a "Secret:" / "Name:" label or stray spaces pasted in
@@ -76,29 +80,51 @@ def find_candidates(token, posted):
     langs = set(CFG["languages"])
 
     broadcaster_ids = set()
-    for s in helix(token, "streams", {"first": CFG["top_streams_to_scan"], "language": CFG["languages"][0]}):
+    clips = {}
+    only = CFG.get("only_game_names")
+    if only:
+        # single-game page: only clips from these Twitch categories, nothing else
+        gids = [g["id"] for g in helix(token, "games", [("name", n) for n in only])]
+        log(f"Game-only mode: {only} -> category ids {gids}")
+        for gid in gids:
+            cursor = None
+            for _ in range(3):  # up to 300 clips per game
+                params = {"game_id": gid, "first": 100, **window}
+                if cursor:
+                    params["after"] = cursor
+                r = requests.get("https://api.twitch.tv/helix/clips", params=params, headers={
+                    "Client-Id": TWITCH_ID, "Authorization": f"Bearer {token}"}, timeout=30)
+                if r.status_code != 200:
+                    break
+                body = r.json()
+                for c in body.get("data", []):
+                    clips[c["id"]] = c
+                    broadcaster_ids.add(c["broadcaster_id"])
+                cursor = (body.get("pagination") or {}).get("cursor")
+                if not cursor:
+                    break
+    for s in ([] if only else helix(token, "streams", {"first": CFG["top_streams_to_scan"], "language": CFG["languages"][0]})):
         broadcaster_ids.add(s["user_id"])
-    logins = CFG["seed_streamers"] + CFG["campaign_streamers"]
+    logins = [] if only else CFG.get("seed_streamers", []) + CFG.get("campaign_streamers", [])
     for i in range(0, len(logins), 100):
         for u in helix(token, "users", [("login", l) for l in logins[i:i + 100]]):
             broadcaster_ids.add(u["id"])
 
-    clips = {}
-    for bid in broadcaster_ids:
+    for bid in ([] if only else list(broadcaster_ids)):
         for c in helix(token, "clips", {"broadcaster_id": bid, "first": 5, **window}):
             clips[c["id"]] = c
-    game_ids = [g["id"] for g in helix(token, "games/top", {"first": CFG["top_games_to_scan"]})]
-    for gid in dict.fromkeys(CFG.get("always_scan_categories", []) + game_ids):
+    game_ids = [] if only else [g["id"] for g in helix(token, "games/top", {"first": CFG["top_games_to_scan"]})]
+    for gid in ([] if only else dict.fromkeys(CFG.get("always_scan_categories", []) + game_ids)):
         for c in helix(token, "clips", {"game_id": gid, "first": 50, **window}):
             clips[c["id"]] = c
 
-    if CFG.get("kick_enabled"):
+    if CFG.get("kick_enabled") and not only:
         for k in kick_clips():
             clips[k["id"]] = k
 
-    campaign = {s.lower() for s in CFG["campaign_streamers"]}
-    seeds = {s.lower() for s in CFG["seed_streamers"] + CFG.get("kick_seed_streamers", [])}
-    blocked = {s.lower() for s in CFG["blocked_streamers"]}
+    campaign = {s.lower() for s in CFG.get("campaign_streamers", [])}
+    seeds = {s.lower() for s in CFG.get("seed_streamers", []) + CFG.get("kick_seed_streamers", [])}
+    blocked = {s.lower() for s in CFG.get("blocked_streamers", [])}
     good = []
     for c in clips.values():
         name = c["broadcaster_name"].lower()
@@ -200,7 +226,40 @@ def ass_escape(s):
     return s.replace("\\", "").replace("{", "(").replace("}", ")").replace("\n", " ")
 
 
-def build_ass(words, header, duration, path, overlay=""):
+# ------------------------------------------------------------- Hook text ---
+HOOKS = [
+    "{name} did NOT expect this",
+    "Wait for the ending...",
+    "{name} could not believe this",
+    "Nobody saw this coming",
+    "Chat went crazy after this",
+    "Watch {name}'s reaction",
+    "This is why we watch {name}",
+    "Rate this moment 1-10",
+]
+_EMOJI = re.compile("[\U0001F000-\U0001FAFF\u2600-\u27BF\uFE0F\u200D]")
+
+
+def hook_text(clip):
+    """Short white line at the top of the video that makes people keep watching.
+    Uses the clip's own title (viewers usually write a good one); falls back to a
+    rotating template when the title is junk. No emoji (the video font can't draw them)."""
+    name = clip["broadcaster_name"]
+    t = _EMOJI.sub("", clip.get("title") or "")
+    t = re.sub(r"(?<!\w)[#!@]\w+", "", t)            # hashtags, !commands, @mentions
+    t = re.sub(r"\s+", " ", t).strip(" -|:,.")
+    letters = sum(ch.isalpha() for ch in t)
+    bad = (len(t) < 8 or len(t.split()) < 2 or letters < len(t) * 0.5
+           or t.lower().replace(" ", "") == name.lower().replace(" ", ""))
+    if bad:
+        pick = int(re.sub(r"\D", "", str(clip["id"]))[-4:] or 0) if re.search(r"\d", str(clip["id"])) else len(clip["id"])
+        t = HOOKS[pick % len(HOOKS)].format(name=name)
+    if len(t) > 60:                                     # max about two lines, readable in one glance
+        t = t[:60].rsplit(" ", 1)[0] + "..."
+    return t
+
+
+def build_ass(words, header, duration, path, overlay="", hook=""):
     lines = []
     chunk = []
     for w in words:
@@ -212,6 +271,8 @@ def build_ass(words, header, duration, path, overlay=""):
         lines.append(chunk)
 
     ev = [f"Dialogue: 0,{ass_time(0)},{ass_time(duration)},Header,,0,0,0,,{ass_escape(header)}"]
+    if hook:
+        ev.append(f"Dialogue: 2,{ass_time(0)},{ass_time(duration)},Hook,,0,0,0,,{ass_escape(hook)}")
     if overlay:
         ev.append(f"Dialogue: 0,{ass_time(0)},{ass_time(duration)},Overlay,,0,0,0,,{ass_escape(overlay)}")
     for i, ch in enumerate(lines):
@@ -229,6 +290,7 @@ def build_ass(words, header, duration, path, overlay=""):
         "Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding\n"
         "Style: Cap,Noto Sans,84,&H00FFFFFF,&H00FFFFFF,&H00000000,&H64000000,-1,0,0,0,100,100,0,0,1,6,2,8,60,60,1330,1\n"
         "Style: Header,Noto Sans,58,&H00FFFFFF,&H00FFFFFF,&H00000000,&H64000000,-1,0,0,0,100,100,0,0,1,5,2,2,60,60,1300,1\n"
+        "Style: Hook,Noto Sans,74,&H00FFFFFF,&H00FFFFFF,&H00000000,&H64000000,-1,0,0,0,100,100,0,0,1,7,3,8,70,70,250,1\n"
         "Style: Overlay,Noto Sans,50,&H0000D7FF,&H00FFFFFF,&H00000000,&H64000000,-1,0,0,0,100,100,0,0,1,4,2,8,60,60,1500,1\n\n"
         "[Events]\nFormat: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text\n"
         + "\n".join(ev) + "\n", encoding="utf-8")
@@ -259,8 +321,9 @@ def produce(clip):
     words = transcribe(raw)
     ass = WORK / f"{cid}.ass"
     key = clip["broadcaster_name"].lower().replace(" ", "")
+    clip["hook"] = hook_text(clip) if CFG.get("hook_text", True) else ""
     build_ass(words, clip["broadcaster_name"], clip["duration"], ass,
-              CFG.get("campaign_overlays", {}).get(key, "") if clip.get("paid") else "")
+              CFG.get("campaign_overlays", {}).get(key, "") if clip.get("paid") else "", clip["hook"])
     safe = re.sub(r"[^A-Za-z0-9_-]", "", cid)[:60]
     out = OUT / f"{dt.date.today():%Y%m%d}-{safe}.mp4"
     make_vertical(raw, ass, out, clip["duration"])
@@ -273,7 +336,7 @@ def load_media_branch():
     if MEDIA.exists():
         shutil.rmtree(MEDIA)
     url = f"https://x-access-token:{GH_TOKEN}@github.com/{REPO}.git"
-    ok = subprocess.run(["git", "clone", "-q", "--depth", "1", "--branch", "media", url, str(MEDIA)],
+    ok = subprocess.run(["git", "clone", "-q", "--depth", "1", "--branch", MEDIA_BRANCH, url, str(MEDIA)],
                         capture_output=True).returncode == 0
     if not ok:
         MEDIA.mkdir(parents=True)
@@ -292,15 +355,15 @@ def publish_media(files, posted):
     (MEDIA / "posted.json").write_text(json.dumps(posted, indent=1))
     shutil.rmtree(MEDIA / ".git", ignore_errors=True)
     g = lambda *a: subprocess.run(["git", "-C", str(MEDIA), *a], check=True, capture_output=True)
-    g("init", "-q", "-b", "media")
+    g("init", "-q", "-b", MEDIA_BRANCH)
     g("config", "user.name", "streamrecap-bot")
     g("config", "user.email", "bot@users.noreply.github.com")
     g("add", "-A")
     g("commit", "-q", "-m", f"clips {dt.date.today()}")
-    g("push", "-q", "--force", f"https://x-access-token:{GH_TOKEN}@github.com/{REPO}.git", "media")
+    g("push", "-q", "--force", f"https://x-access-token:{GH_TOKEN}@github.com/{REPO}.git", MEDIA_BRANCH)
     urls = {}
     for f in files:
-        u = f"https://raw.githubusercontent.com/{REPO}/media/clips/{f.name}"
+        u = f"https://raw.githubusercontent.com/{REPO}/{MEDIA_BRANCH}/clips/{f.name}"
         for _ in range(30):
             if requests.head(u, timeout=20).status_code == 200:
                 break
@@ -317,13 +380,13 @@ def push_preview(files):
     for f in files:
         shutil.copy(f, d / f.name)
     g = lambda *a: subprocess.run(["git", "-C", str(d), *a], check=True, capture_output=True)
-    g("init", "-q", "-b", "preview")
+    g("init", "-q", "-b", PREVIEW_BRANCH)
     g("config", "user.name", "streamrecap-bot")
     g("config", "user.email", "bot@users.noreply.github.com")
     g("add", "-A")
     g("commit", "-q", "-m", "test clips")
-    g("push", "-q", "--force", f"https://x-access-token:{GH_TOKEN}@github.com/{REPO}.git", "preview")
-    log("Test clips saved to the 'preview' branch.")
+    g("push", "-q", "--force", f"https://x-access-token:{GH_TOKEN}@github.com/{REPO}.git", PREVIEW_BRANCH)
+    log(f"Test clips saved to the '{PREVIEW_BRANCH}' branch.")
 
 
 # ------------------------------------------------------------------- Buffer ---
@@ -375,7 +438,7 @@ def post_clip(clip, url, due, chans):
     if clip.get("caption"):
         text = clip["caption"]
     else:
-        text = f"{title} 😭\n\n🎥 {name} on {clip.get('platform', 'Twitch')}\n{CFG['hashtags']} #{clip.get('platform', 'Twitch').lower()} #{name.lower().replace(' ', '')} {tag}".rstrip()
+        text = f"{title} 😭\n\n🎥 {name} on {clip.get('platform', 'Twitch')}\n{CFG.get('hashtags', '')} #{clip.get('platform', 'Twitch').lower()} #{name.lower().replace(' ', '')} {tag}".rstrip()
     results = []
     for ch in chans:
         svc = ch["service"]
@@ -431,6 +494,9 @@ def main():
         return post_batch(Path(args.batch))
     if not CFG.get("live", False):
         args.dry_run = True  # posting switched off in config.json
+    if not BUFFER_KEY:
+        log("No Buffer key saved yet - running in test mode (nothing posted).")
+        args.dry_run = True
     OUT.mkdir(exist_ok=True)
     WORK.mkdir(exist_ok=True)
 
@@ -459,7 +525,7 @@ def main():
         except Exception as e:
             log(f"Skipped {clip['id']}: {e}")
 
-    summary = [{"streamer": c["broadcaster_name"], "title": c["title"], "views": c["view_count"],
+    summary = [{"streamer": c["broadcaster_name"], "title": c["title"], "hook": c.get("hook", ""), "views": c["view_count"],
                 "twitch_url": c["url"], "file": f.name, "transcript": c.get("transcript", "")}
                for c, f in made]
     if args.dry_run and made and GH_TOKEN:
@@ -486,7 +552,7 @@ def main():
     (OUT / "summary.json").write_text(json.dumps({"log": log_lines, "clips": summary}, indent=1))
     step = os.environ.get("GITHUB_STEP_SUMMARY")
     if step:
-        Path(step).write_text("## Stream Recap Daily\n\n" + "\n".join("- " + l for l in log_lines))
+        Path(step).write_text(f"## {CFG.get('page_name', 'Stream Recap Daily')}\n\n" + "\n".join("- " + l for l in log_lines))
     if not made:
         sys.exit("No clips were made today.")
 
