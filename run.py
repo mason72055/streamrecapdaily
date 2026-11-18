@@ -408,6 +408,21 @@ def buffer_channels():
     return chans
 
 
+def my_channels():
+    """Only the Buffer channels that belong to this page (several pages share one Buffer)."""
+    want = {n.lower() for n in CFG.get("buffer_channel_names", [])}
+    skip = {n.lower() for n in CFG.get("buffer_exclude_channel_names", [])}
+    out = []
+    for c in buffer_channels():
+        if c["service"] not in ("tiktok", "youtube", "instagram"):
+            continue
+        n = (c.get("name") or "").lower()
+        if (want and n not in want) or n in skip:
+            continue
+        out.append(c)
+    return out
+
+
 CREATE = """mutation($input: CreatePostInput!) { createPost(input: $input) {
   ... on PostActionSuccess { post { id dueAt } }
   ... on MutationError { message } } }"""
@@ -468,7 +483,7 @@ def post_clip(clip, url, due, chans):
 def post_batch(folder):
     """batch.json: [{"file": "a.mp4", "caption": "...", "yt_title": "...", "due_central": "2026-11-12 11:00"}]"""
     items = json.loads((folder / "batch.json").read_text())
-    chans = [c for c in buffer_channels() if c["service"] in ("tiktok", "youtube", "instagram")]
+    chans = my_channels()
     posted = load_media_branch()
     files = [folder / it["file"] for it in items]
     urls = publish_media(files, posted)
@@ -502,7 +517,7 @@ def main():
 
     chans = []
     try:
-        chans = [c for c in buffer_channels() if c["service"] in ("tiktok", "youtube", "instagram")]
+        chans = my_channels()
         log("Buffer channels: " + ", ".join(f"{c['service']}={c['name']}" for c in chans))
     except Exception as e:
         log(f"Buffer check FAILED: {e} [key length {len(BUFFER_KEY)}]")

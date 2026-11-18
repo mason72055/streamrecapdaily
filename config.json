@@ -90,5 +90,8 @@
   "campaign_platform_only": {
     "skiimasktimmy": "Twitch",
     "irubyana": "Twitch"
-  }
+  },
+  "buffer_channel_names": [
+    "streamrecapdaily3"
+  ]
 }

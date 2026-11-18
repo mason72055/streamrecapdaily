@@ -7,7 +7,7 @@ Every morning this picks the most-watched Twitch clips from the last 24 hours, t
 ## GTA 6 page
 Same code, settings in `config_gta.json` (5 GTA 6-only clips a day, posted through its own Buffer).
 - Runs every morning from the "GTA 6 clips" workflow.
-- Needs the GTA Buffer key saved as the repo secret `BUFFER_API_KEY_GTA`; until then it runs in test mode and posts nothing.
+- Shares Stream Recap Daily's Buffer. Each page only posts to its own channels: `buffer_channel_names` (only these) / `buffer_exclude_channel_names` (all but these) in its config.
 
 ## Hook text
 Every clip gets a short white line at the top (from the clip's title, or a rotating fallback). Turn off per page with `"hook_text": false`.
