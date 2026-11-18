@@ -1,0 +1,66 @@
+{
+ "log": [
+  "Buffer channels: tiktok=vicecityclips1650",
+  "Twitch login OK",
+  "Game-only mode: ['Grand Theft Auto VI'] -> category ids ['1867279146']",
+  "Scanned 287 clips from 83 streamers; 94 usable.",
+  "Skipped DifferentSullenReubenItsBoshyTime-K1Eo8-_fjY3ZqQan: nudity on screen (BUTTOCKS_EXPOSED at 001s) - not posting",
+  "Made: xQc - xQc commits Grand Theft Auto for the first time in GTA 6 (16339 views) -> 20261118-WealthyNimbleHamsterDansGame-yrU7UShZomelh1Ke.mp4",
+  "Skipped UnusualMoistSharkBIRB-Wlz2wmgaTOQAniKu: nudity on screen (BUTTOCKS_EXPOSED at 019s) - not posting",
+  "Skipped TrustworthyCarefulJalapenoKAPOW--CPhZdDJiBW-X0-C: blocked word said in clip ('pussy') - not posting",
+  "Made: Lacy - LUCIA (10791 views) -> 20261118-SlickStylishBeaverStrawBeary-ljpqadoCXEhYwJx5.mp4",
+  "Made: ohnePixel - Ohnepixel agrees with Hasan. (10544 views) -> 20261118-WiseBusyStapleNononoCat--XYNEyYmRlr4KoEY.mp4",
+  "Skipped CredulousKawaiiTriangleFUNgineer-Zys54vtw1G4OmIkN: nudity on screen (BUTTOCKS_EXPOSED at 001s) - not posting",
+  "Skipped EsteemedAlertBoarTTours-qTa7AtR3giDjQF5-: nudity on screen (BUTTOCKS_EXPOSED at 004s) - not posting",
+  "Skipped SillyTangibleStrawberryVoteNay-gI1V8xjNV_DdVAuK: nudity on screen (FEMALE_BREAST_EXPOSED at 006s) - not posting",
+  "Made: jasontheween - Reset (4827 views) -> 20261118-PerfectCrypticChinchillaKappaClaus-nCPM8sJuQmLth2l4.mp4",
+  "Made: BrycexD - audacity auda ticker (4625 views) -> 20261118-CallousInspiringRuffSuperVinlin-ZORXxsZrAvTCjx7k.mp4"
+ ],
+ "clips": [
+  {
+   "streamer": "xQc",
+   "title": "xQc commits Grand Theft Auto for the first time in GTA 6",
+   "hook": "xQc commits Grand Theft Auto for the first time in GTA 6",
+   "views": 16339,
+   "twitch_url": "https://www.twitch.tv/xqc/clip/WealthyNimbleHamsterDansGame-yrU7UShZomelh1Ke",
+   "file": "20261118-WealthyNimbleHamsterDansGame-yrU7UShZomelh1Ke.mp4",
+   "transcript": "That it am I good I got a car. I was just looking at the button. Please come back. Please come back Sure, I can try this. Oh My so you're saying ran. Yeah, I ran. I mean Well, I'm with the cops. No, it was like"
+  },
+  {
+   "streamer": "Lacy",
+   "title": "LUCIA",
+   "hook": "Watch Lacy's reaction",
+   "views": 10791,
+   "twitch_url": "https://www.twitch.tv/lacy/clip/SlickStylishBeaverStrawBeary-ljpqadoCXEhYwJx5",
+   "file": "20261118-SlickStylishBeaverStrawBeary-ljpqadoCXEhYwJx5.mp4",
+   "transcript": "Oh, she's so hot. Oh, she's so hot"
+  },
+  {
+   "streamer": "ohnePixel",
+   "title": "Ohnepixel agrees with Hasan.",
+   "hook": "Ohnepixel agrees with Hasan",
+   "views": 10544,
+   "twitch_url": "https://www.twitch.tv/ohnepixel/clip/WiseBusyStapleNononoCat--XYNEyYmRlr4KoEY",
+   "file": "20261118-WiseBusyStapleNononoCat--XYNEyYmRlr4KoEY.mp4",
+   "transcript": "You ready to engage, what does that mean? They're not gonna shoot if I'm close to civilians. They look too risky. No, no, no, no, no, no, no! Shieser, shieser, I couldn't navigate. I couldn't, that's the bad."
+  },
+  {
+   "streamer": "jasontheween",
+   "title": "Reset",
+   "hook": "jasontheween did NOT expect this",
+   "views": 4827,
+   "twitch_url": "https://www.twitch.tv/jasontheween/clip/PerfectCrypticChinchillaKappaClaus-nCPM8sJuQmLth2l4",
+   "file": "20261118-PerfectCrypticChinchillaKappaClaus-nCPM8sJuQmLth2l4.mp4",
+   "transcript": "Lou you staring at that window again. No, bro. Mm -hmm. No, I'm not doing this. You can look out there all day girl I'm not gonna change. No, no, there's no way. There's no way right fucking way"
+  },
+  {
+   "streamer": "BrycexD",
+   "title": "audacity auda ticker",
+   "hook": "audacity auda ticker",
+   "views": 4625,
+   "twitch_url": "https://www.twitch.tv/brycexd/clip/CallousInspiringRuffSuperVinlin-ZORXxsZrAvTCjx7k",
+   "file": "20261118-CallousInspiringRuffSuperVinlin-ZORXxsZrAvTCjx7k.mp4",
+   "transcript": "It's audacity! It's audacity! It's audacity! It's audacity! I can't click on it! I can't click on it! I can't click on it, but it's audacity. Have you invested, chat? It's audacity. Have you invested? I can't click. I can't click though! I can't click though. I can't click though. It's audacity though! I don't know if that's guaranteed, chat. I don't know if that's guaranteed. I don't know if that's guaranteed. I don't know if that's guaranteed. It just says audacity. Oh no! I can't click on it. Fuck!"
+  }
+ ]
+}
