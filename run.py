@@ -437,8 +437,13 @@ def schedule_times(n):
         t = now.replace(hour=hh, minute=mm, second=0, microsecond=0)
         if t < now + dt.timedelta(minutes=20):
             t = now + dt.timedelta(minutes=30 + 60 * i)
-        times.append(t.astimezone(dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.000Z"))
-    return times
+        times.append(t)
+    # never put two posts closer than 75 minutes (happens when a run starts late in the day)
+    times.sort()
+    for i in range(1, len(times)):
+        if times[i] - times[i - 1] < dt.timedelta(minutes=75):
+            times[i] = times[i - 1] + dt.timedelta(minutes=75)
+    return [t.astimezone(dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.000Z") for t in times]
 
 
 def post_clip(clip, url, due, chans):
