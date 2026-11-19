@@ -1,0 +1,40 @@
+{
+ "log": [
+  "Buffer channels: instagram=streamrecapdaily3, tiktok=streamrecapdaily3",
+  "Twitch login OK",
+  "Kick: 181 clips found (0 of 11 requests blocked/failed).",
+  "Scanned 774 clips from 52 streamers; 291 usable.",
+  "Made: DavyJones - DAVA JONES THE PLUMBER (39662 views) -> 20261119-clip_01M7QDAFVYHDBCX9RW4Z7ZSY62.mp4",
+  "Made: Lacy - someone Pepper sprayed Lacy (4047 views) -> 20261119-BillowingPleasantClamCurseLit-R73-ZzHPGZEgBNxJ.mp4",
+  "Made: AdinRoss - etaztjgzyhrfxsj (19890 views) -> 20261119-clip_01M7RP0WZYS0W8VVWWZ4CR5M7B.mp4"
+ ],
+ "clips": [
+  {
+   "streamer": "DavyJones",
+   "title": "DAVA JONES THE PLUMBER",
+   "hook": "DAVA JONES THE PLUMBER",
+   "views": 39662,
+   "twitch_url": "https://clips.kick.com/clips/07/clip_01M7QDAFVYHDBCX9RW4Z7ZSY62/playlist.m3u8",
+   "file": "20261119-clip_01M7QDAFVYHDBCX9RW4Z7ZSY62.mp4",
+   "transcript": "Okay, let's go Who's there? He's a zombie kid Oh have an ex -girlfriend in prison you're getting back together with her aren't you it's complicated just tell me the truth you need to calm down starting to freak me out no I I have to know I mean what does it go back to work yes no Jason you have to tell me you and me we were supposed to get married yeah really fucking know each other"
+  },
+  {
+   "streamer": "Lacy",
+   "title": "someone Pepper sprayed Lacy",
+   "hook": "someone Pepper sprayed Lacy",
+   "views": 4047,
+   "twitch_url": "https://www.twitch.tv/lacy/clip/BillowingPleasantClamCurseLit-R73-ZzHPGZEgBNxJ",
+   "file": "20261119-BillowingPleasantClamCurseLit-R73-ZzHPGZEgBNxJ.mp4",
+   "transcript": "Look at my headphones, look at my headphones, look at my headphones. Watch out. I don't know where I'm going to sit then. I'm going to spit in my eye. Oh my god, I can't see in my eye. I can't see in my eye. Someone, I can't open my left eye. Someone just sprayed alcohol or something in my left eye. I can't open my eye."
+  },
+  {
+   "streamer": "AdinRoss",
+   "title": "etaztjgzyhrfxsj",
+   "hook": "Wait for the ending...",
+   "views": 19890,
+   "twitch_url": "https://clips.kick.com/clips/93/clip_01M7RP0WZYS0W8VVWWZ4CR5M7B/playlist.m3u8",
+   "file": "20261119-clip_01M7RP0WZYS0W8VVWWZ4CR5M7B.mp4",
+   "transcript": "house and now what I didn't fix the railing paint the wall bro what these non -native creatures have migrated from more liberal climates where's the railing to our ecosystem the state is requesting that all visitors comply with our anti furry law by stomping beating or shooting any furry they see anti furry law unless it may appear with your help we can strive towards a furry free Leonida and I want to kill all furry show your thoughts thank you and enjoy your stay"
+  }
+ ]
+}
