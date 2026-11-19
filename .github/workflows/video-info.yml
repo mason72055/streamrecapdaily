@@ -1,0 +1,23 @@
+name: Video info (research)
+on:
+  workflow_dispatch:
+    inputs:
+      urls:
+        description: "Comma-separated YouTube URLs"
+        required: true
+jobs:
+  info:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -q -U yt-dlp
+      - run: python tools/video_info.py "${{ github.event.inputs.urls }}"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: video-info
+          path: video_info.json
+          retention-days: 2
