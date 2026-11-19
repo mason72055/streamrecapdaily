@@ -93,5 +93,9 @@
   },
   "buffer_channel_names": [
     "streamrecapdaily3"
-  ]
+  ],
+  "skip_game_ids": [
+    "1867279146"
+  ],
+  "kick_weight": 0.5
 }

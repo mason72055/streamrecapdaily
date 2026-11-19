@@ -140,6 +140,15 @@ def find_candidates(token, posted):
         boost = 3 if (name in campaign or login in campaign) else 1
         if name in seeds or login in seeds:
             boost *= CFG.get("seed_boost", 1)
+        if c.get("game_id") and c["game_id"] in CFG.get("skip_game_ids", []):
+            continue  # another page owns this game (GTA 6 -> Vice City Clips), so no duplicates
+        if looks_foreign(c.get("title", "")):
+            continue  # non-English titles flopped on our pages
+        # What did well so far: real moments with real titles. Junk titles and Kick did worst.
+        words_ok = len([w for w in c.get("title", "").split() if sum(ch.isalpha() for ch in w) >= 2])
+        boost *= CFG.get("titled_boost", 1.5) if words_ok >= 4 else (0.5 if words_ok < 2 else 1)
+        if c.get("platform") == "Kick":
+            boost *= CFG.get("kick_weight", 1)
         c["score"] = c["view_count"] * boost
         good.append(c)
     # Paid (campaign) clips go first; the rest of the day's slots are filled with top clips.
@@ -209,6 +218,18 @@ def blocked_hit(text):
         if f" {w.lower()} " in t or (len(w) > 5 and w.lower() in t):
             return w
     return ""
+
+
+FOREIGN = {"la", "el", "los", "las", "que", "se", "de", "del", "por", "jaja", "jajaja", "jajajaja",
+           "kkkk", "kkk", "não", "nao", "das", "und", "ist", "ich", "c'est", "est", "pas", "le"}
+
+
+def looks_foreign(title):
+    """Rough check for Spanish/Portuguese/German/French clip titles."""
+    ws = re.findall(r"[a-zà-ÿ']+", (title or "").lower())
+    if any(w.startswith("jaja") or w.startswith("kkkk") for w in ws):
+        return True
+    return len(ws) >= 3 and sum(w in FOREIGN for w in ws) >= 2
 
 
 _nude = None
