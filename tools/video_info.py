@@ -8,8 +8,11 @@ tmp = pathlib.Path("vi_tmp"); tmp.mkdir(exist_ok=True)
 for u in urls:
     rec = {"url": u}
     try:
-        j = json.loads(subprocess.run(["yt-dlp", "-J", "--skip-download", "--no-warnings", u],
-                                      capture_output=True, text=True, timeout=120).stdout or "{}")
+        r = subprocess.run(["yt-dlp", "-J", "--skip-download", "--no-warnings", u],
+                           capture_output=True, text=True, timeout=120)
+        j = json.loads(r.stdout or "null") or {}
+        if not j:
+            rec["error"] = r.stderr[-300:]
         rec.update(title=j.get("title"), channel=j.get("channel"), duration=j.get("duration"),
                    upload_date=j.get("upload_date"),
                    chapters=[(round(c["start_time"]), c["title"]) for c in (j.get("chapters") or [])],
